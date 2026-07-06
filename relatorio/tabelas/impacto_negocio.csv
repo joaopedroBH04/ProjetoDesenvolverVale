@@ -1,0 +1,11 @@
+Indicador,Valor
+Alertas don't go no teste (fev/2026),188.0
+Alertas antecipados pelo modelo (≥1 acerto nas 4 h anteriores),133.0
+Taxa de antecipação,0.707
+Antecedência mediana do 1º aviso (h),3.44
+Duração média da manutenção corretiva (h),6.74
+Horas de parada não planejada evitadas (premissa 35%),313.7
+Falsos positivos no mês (inspeções vazias),1066.0
+Benefício bruto estimado (R$),1882049.0
+Custo das inspeções vazias (R$),479700.0
+Benefício líquido estimado no mês (R$),1402349.0

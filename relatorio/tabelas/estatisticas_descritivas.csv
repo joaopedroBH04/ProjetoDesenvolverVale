@@ -1,0 +1,6 @@
+Tabela,Feature,Tipo,Pct_Nulos,Min,Max,Media,Mediana,Desvio_Padrao
+Apontamentos,duracao_min,float64,0.0,-318.77,2959.9,41.83,38.78,73.01
+Telemetria,Valor,float64,55.41,0.0,854.9,81.71,58.2,107.08
+Telemetria,Id_Criticidade,int64,0.0,1.0,4.0,3.15,3.0,0.66
+Telemetria,Is_Dont_Go,int8,0.0,0.0,1.0,0.04,0.0,0.18
+Telemetria,Dia,int64,0.0,1.0,31.0,14.7,14.0,8.58
