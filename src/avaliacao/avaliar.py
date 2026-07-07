@@ -4,7 +4,7 @@
 O limiar de operação é escolhido na VALIDAÇÃO maximizando F2 (recall pesa o
 dobro da precisão): na mina, o falso negativo vira parada não planejada com
 equipamento possivelmente comprometido, enquanto o falso positivo custa uma
-inspeção de ~1 h. O teste (fev/2026) é tocado uma única vez, já com o limiar
+inspeção de ~1 h. O teste (jun/2025) é tocado uma única vez, já com o limiar
 congelado.
 """
 
@@ -101,7 +101,7 @@ def analise_falsos_negativos(sc_te, alertas, abt, limiar, campeao="LightGBM"):
 def degradacao_temporal(sc_va, sc_te, campeao="LightGBM"):
     """AUC por quinzena para verificar estabilidade (drift)."""
     linhas = []
-    for nome, sc in (("jan/2026 (validação)", sc_va), ("fev/2026 (teste)", sc_te)):
+    for nome, sc in (("mai/2025 (validação)", sc_va), ("jun/2025 (teste)", sc_te)):
         sc = sc.copy()
         sc["quinzena"] = np.where(sc["t_decisao"].dt.day <= 15, "1ª quinzena", "2ª quinzena")
         for q, g in sc.groupby("quinzena"):
@@ -120,7 +120,7 @@ def impacto_negocio(sc_te, alertas, ap, limiar, campeao="LightGBM"):
     sc = sc_te.copy()
     sc["pred"] = sc[campeao] >= limiar
 
-    # alertas de fev/2026 antecipados: com ao menos um TP nas 4 h anteriores
+    # alertas do mês de teste antecipados: com ao menos um TP nas 4 h anteriores
     al_teste = alertas[alertas["Data_Alerta"] >= sc["t_decisao"].min()].copy()
     tp = sc[(sc["y"] == 1) & sc["pred"]]
     janela = pd.Timedelta(hours=JANELA_PREDICAO_HORAS)
@@ -135,14 +135,23 @@ def impacto_negocio(sc_te, alertas, ap, limiar, campeao="LightGBM"):
             antecedencias.append(
                 (linha.Data_Alerta - acertos["t_decisao"].min()).total_seconds() / 3600)
 
-    dur_corretiva_h = ap.loc[ap["Classe"] == "Manutenção Corretiva", "duracao_min"].mean() / 60
+    # A base registra classe única "Manutenção" e fatia atividades longas em
+    # ciclos de no máximo 60 min; a duração real da intervenção é a do
+    # EPISÓDIO: apontamentos consecutivos da mesma Tag com intervalo < 30 min.
+    manut = ap[ap["Classe"] == "Manutenção"].sort_values(["Tag", "Inicio"]).copy()
+    fim_anterior = manut.groupby("Tag")["Fim"].shift()
+    novo_episodio = (manut["Inicio"] - fim_anterior > pd.Timedelta("30min")) | fim_anterior.isna()
+    manut["_ep"] = novo_episodio.cumsum()
+    episodios = manut.groupby("_ep").agg(ini=("Inicio", "min"), fim=("Fim", "max"))
+    dur_corretiva_h = ((episodios["fim"] - episodios["ini"])
+                       .dt.total_seconds() / 3600).mean()
     horas_evitadas = antecipados * dur_corretiva_h * REDUCAO_PARADA_ANTECIPADA
     fp = int((~sc["y"].astype(bool) & sc["pred"]).sum())
     beneficio = horas_evitadas * CUSTO_HORA_PARADA
     custo_fp = fp * CUSTO_INSPECAO
 
     tab = pd.DataFrame([
-        ("Alertas don't go no teste (fev/2026)", len(al_teste)),
+        ("Alertas don't go no teste (jun/2025)", len(al_teste)),
         ("Alertas antecipados pelo modelo (≥1 acerto nas 4 h anteriores)", antecipados),
         ("Taxa de antecipação", round(antecipados / max(len(al_teste), 1), 3)),
         ("Antecedência mediana do 1º aviso (h)", round(float(np.median(antecedencias)), 2)),

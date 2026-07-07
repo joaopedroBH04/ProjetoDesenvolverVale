@@ -1,52 +1,14 @@
 TIPO,EVENTO,positivos,fn,taxa_fn
-SISTEMA,Minecare não funciona,78,78,1.0
-SISTEMA,MEMS não comunica,43,43,1.0
-ALARME OEM,Engine Coolant Level Low,58,32,0.552
-ALARME OEM,Engine Oil Level - Data Erratic - Ce (Active),17,17,1.0
-ALARME OEM,High Engine Coolant Temperature,51,16,0.314
-ALARME OEM,Left Exhaust Temperature - Active,19,16,0.842
-ALARME OEM,Low Hydraulic Oil Level,30,16,0.533
-ALARME OEM,Engine Oil Filter Restriction Warning,31,15,0.484
-ALARME OEM,4th Tire Temperature High Maximum,23,13,0.565
-ALARME OEM,Coolant Level - Data Erratic - Ce (Active),12,12,1.0
-ALARME OEM,5th Tire Temperature High Maximum,20,11,0.55
-ALARME OEM,High Left Turbo Turbine Inlet Temperature,42,11,0.262
-ALARME OEM,Low Engine Oil Pressure,8,8,1.0
-ALARME OEM,Low Transmission Oil Level,17,7,0.412
-ALARME OEM,2nd Tire Temperature High Maximum,13,7,0.538
-ALARME OEM,Engine Coolant Temperature - Active,55,6,0.109
-ALARME OEM,Generator Critical Over Temperature (L-1850),6,6,1.0
-TENDÊNCIA,MC - Tendência baixa pressão do óleo motor <250KPA,27,6,0.222
-ALARME OEM,Central Lubrication System Empty,10,5,0.5
-ALARME OEM,6th Tire Temperature High Maximum,5,5,1.0
-ALARME OEM,HPD Gearbox Oil Pressure Critically Low (L-1850),5,5,1.0
-ALARME OEM,[036.03] Grid blower fault / Gy19 Grid Blower Failure - Blower 1 Open,5,5,1.0
-ALARME OEM,Hydraulic oil level too low,5,5,1.0
-ALARME OEM,Engine Oil Filter - Active,5,5,1.0
-ALARME OEM,Autolube Pressure Not Decreasing After Cycle,18,5,0.278
-ALARME OEM,Crankcase Pressure - Active,54,4,0.074
-ALARME OEM,Engine Oil Rifle Pressure - Valid But Low - Most Severe - P (Active),5,4,0.8
-ALARME OEM,Low Auto Lube Pressure,4,4,1.0
-TENDÊNCIA,MA - Restrição de filtro de óleo motor >120 KPA,25,4,0.16
-ALARME OEM,High Steering Oil Temperature,6,4,0.667
-ALARME OEM,Low Engine Coolant Level,18,3,0.167
-ALARME OEM,High Left Rear Brake Oil Temperature,31,2,0.065
-ALARME OEM,Low Expansion Tank Fluid Level,4,1,0.25
-ALARME OEM,Transmission Oil Level - Active,31,1,0.032
-ALARME OEM,Engine Coolant Level - Active,18,0,0.0
-ALARME OEM,Engine Oil Level 1 Low Critical (Active),5,0,0.0
-ALARME OEM,Engine Oil Pressure Low,5,0,0.0
-ALARME OEM,Engine Oil Level - Active,7,0,0.0
-ALARME OEM,Left Front Brake Temperature - Active,6,0,0.0
-ALARME OEM,High Right Front Brake Oil Temperature,13,0,0.0
-ALARME OEM,High Engine Oil Temperature,10,0,0.0
-ALARME OEM,Hydraulic Reservoir Oil Temperature Critically High (L-1850_Gen2),4,0,0.0
-ALARME OEM,High Right Turbo Turbine Inlet Temperature,7,0,0.0
-ALARME OEM,Low Coolant level Active,3,0,0.0
-ALARME OEM,Right Rear Brake Temperature - Active,21,0,0.0
-ALARME OEM,Right Exhaust Temperature - Active,15,0,0.0
-ALARME OEM,Low Oil Pressure - Active,4,0,0.0
-ALARME OEM,Very Low Hydraulic Oil Level,42,0,0.0
-ALARME OEM,[036.04] Grid blower fault / Gy19 Grid Blower Failure - Blower 2 Open,5,0,0.0
-TENDÊNCIA,MA - Diferenca de Temperatura de Freio TE/TD >25 °C,6,0,0.0
-TENDÊNCIA,MC - Tendênica baixa pressão do óleo motor <200KPA,5,0,0.0
+ALARME OEM,Transmission Oil Level - Active,586,380,0.648
+ALARME OEM,Engine Coolant Level - Active,232,124,0.534
+ALARME OEM,Aftercooler Level - Active,121,106,0.876
+ALARME OEM,Right Rear Brake Temperature - Active,90,72,0.8
+ALARME OEM,Left Rear Brake Temperature - Active,78,62,0.795
+ALARME OEM,Right Front Brake Temperature - Active,480,62,0.129
+ALARME OEM,Left Exhaust Temperature - Active,59,41,0.695
+ALARME OEM,Engine Coolant Flow - Active,46,39,0.848
+ALARME OEM,Engine Oil Level - Active,48,38,0.792
+ALARME OEM,Left Front Brake Temperature - Active,40,27,0.675
+ALARME OEM,Parking Brake - Active,9,8,0.889
+ALARME OEM,Hydraulic Reservoir Oil Temperature Critically High (L-1850),7,7,1.0
+ALARME OEM,Right Exhaust Temperature - Active,3,1,0.333

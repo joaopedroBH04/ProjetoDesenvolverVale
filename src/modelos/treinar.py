@@ -2,8 +2,8 @@
 """Treinamento dos modelos supervisionados.
 
 Estratégia de validação: hold-out temporal (nada de k-fold aleatório — em
-séries temporais isso vaza o futuro para o treino). Treino: set–dez/2025;
-validação: jan/2026 (tuning e escolha de limiar); teste: fev/2026 (avaliação
+séries temporais isso vaza o futuro para o treino). Treino: jan–abr/2025;
+validação: mai/2025 (tuning e escolha de limiar); teste: jun/2025 (avaliação
 final, tocado uma única vez).
 
 Modelos:

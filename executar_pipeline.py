@@ -52,7 +52,9 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
         duracao_min=(ap_bruto["Fim"] - ap_bruto["Inicio"]).dt.total_seconds() / 60)
     fontes = [("Apontamentos", ap_num, ["duracao_min"]),
               ("Telemetria", tel_bruto.assign(
-                  Valor=pd.to_numeric(tel_bruto["Valor"], errors="coerce")),
+                  Valor=pd.to_numeric(
+                      tel_bruto["Valor"].astype(str).str.replace(",", ".", regex=False),
+                      errors="coerce")),
                ["Valor", "Id_Criticidade", "Is_Dont_Go", "Dia"])]
     for tabela, df, cols in fontes:
         for c in cols:
@@ -77,7 +79,7 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
     frota_cols = [c for c in abt.columns if c.startswith("frota_")]
     fr = abt[["Tag", "y", "horas_operadas_24h"]].copy()
     fr["Frota"] = abt[frota_cols].idxmax(axis=1).str.replace("frota_", "", regex=False)
-    horas_op = ap[ap["Classe"] == "Operação"].groupby("Tag")["duracao_min"].sum() / 60
+    horas_op = ap[ap["Classe"] == "Operando"].groupby("Tag")["duracao_min"].sum() / 60
     mapa_frota = fr.drop_duplicates("Tag").set_index("Tag")["Frota"]
     al = alertas.copy()
     al["Frota"] = al["TAG"].map(mapa_frota)
@@ -99,9 +101,9 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
           .round(3).reset_index())
     op.to_csv(DIR_TABELAS / "taxa_alerta_por_operador.csv", index=False)
 
-    # turno
+    # turno (dois turnos de 12 h nesta operação)
     turnos = []
-    for t in ("A", "B", "C"):
+    for t in ("A", "B"):
         col = f"turno_{t}"
         sub = abt[abt[col] == 1]
         turnos.append(dict(Turno=t, Pontos=len(sub),
@@ -115,6 +117,7 @@ def main():
     print("[1/7] Extração")
     ap_bruto = extracao.carregar_apontamentos()
     tel_bruto = extracao.carregar_telemetria()
+    ap_bruto = extracao.enriquecer_apontamentos_com_operador(ap_bruto, tel_bruto)
     cma = extracao.carregar_catalogo_alarmes()
 
     print("[2/7] Transformação e carga")
