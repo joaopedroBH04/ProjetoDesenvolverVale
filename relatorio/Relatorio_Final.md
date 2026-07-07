@@ -2,7 +2,7 @@
 
 ## Antecipação de Alertas Críticos em Frotas de Mineração
 
-**João Pedro**
+**João Pedro Costa**
 pedrojoaao4@gmail.com
 Programa Desenvolver — Edição 2026
 
