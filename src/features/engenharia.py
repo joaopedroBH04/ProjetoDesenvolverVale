@@ -14,7 +14,7 @@ evitando vazamento temporal. Encodings dependentes da taxa de alerta
 import numpy as np
 import pandas as pd
 
-from src.config import CORTE_TREINO, JANELA_PREDICAO_HORAS
+from src.config import CORTE_JANELA_A, JANELA_PREDICAO_HORAS
 
 JANELAS_H = [4, 12, 24, 72]
 
@@ -163,10 +163,12 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
         dtype=np.int8,
     )
 
-    # Frequência/target encoding APENAS com o período de treino para Tag e
-    # Operador (cardinalidade alta demais para one-hot; taxa histórica carrega
-    # o sinal de "equipamento problemático" / "estilo de operação").
-    corte = pd.Timestamp(CORTE_TREINO)
+    # Frequência/target encoding para Tag e Operador (cardinalidade alta
+    # demais para one-hot; taxa histórica carrega o sinal de "equipamento
+    # problemático" / "estilo de operação"). Estimado APENAS em jan–mar,
+    # período anterior às duas janelas de tuning (abr e mai) e ao teste —
+    # nenhuma estatística vê dados de validação.
+    corte = pd.Timestamp(CORTE_JANELA_A)
     treino = abt[abt["t_decisao"] < corte]
     taxa_global = treino["y"].mean()
 

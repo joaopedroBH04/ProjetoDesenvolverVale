@@ -33,6 +33,10 @@ COOLDOWN_REGRA_HORAS = 6
 # Split temporal (fim exclusivo)
 # Dados disponíveis: jan/2025 a jun/2025.
 # Treino: jan–abr/2025 | validação: mai/2025 | teste: jun/2025.
+# O tuning usa DUAS janelas de validação (abr e mai) para não eleger
+# hiperparâmetros ajustados às idiossincrasias de um único mês; os target
+# encodings são estimados apenas em jan–mar, anteriores a ambas as janelas.
+CORTE_JANELA_A = "2025-04-01"
 CORTE_TREINO = "2025-05-01"
 CORTE_VALIDACAO = "2025-06-01"
 

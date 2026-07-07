@@ -115,18 +115,31 @@ def degradacao_temporal(sc_va, sc_te, campeao="LightGBM"):
     return tab
 
 
-def impacto_negocio(sc_te, alertas, ap, limiar, campeao="LightGBM"):
-    """Converte a matriz de confusão do teste em horas e R$ estimados."""
-    sc = sc_te.copy()
-    sc["pred"] = sc[campeao] >= limiar
+def _duracao_episodio_manutencao(ap: pd.DataFrame) -> float:
+    """Duração média (h) do EPISÓDIO de manutenção.
 
-    # alertas do mês de teste antecipados: com ao menos um TP nas 4 h anteriores
-    al_teste = alertas[alertas["Data_Alerta"] >= sc["t_decisao"].min()].copy()
-    tp = sc[(sc["y"] == 1) & sc["pred"]]
+    A base registra classe única "Manutenção" e fatia atividades longas em
+    ciclos de no máximo 60 min; a duração real da intervenção é a do episódio:
+    apontamentos consecutivos da mesma Tag com intervalo < 30 min."""
+    manut = ap[ap["Classe"] == "Manutenção"].sort_values(["Tag", "Inicio"]).copy()
+    fim_anterior = manut.groupby("Tag")["Fim"].shift()
+    novo_episodio = (manut["Inicio"] - fim_anterior > pd.Timedelta("30min")) | fim_anterior.isna()
+    manut["_ep"] = novo_episodio.cumsum()
+    episodios = manut.groupby("_ep").agg(ini=("Inicio", "min"), fim=("Fim", "max"))
+    return float(((episodios["fim"] - episodios["ini"])
+                  .dt.total_seconds() / 3600).mean())
+
+
+def _resultado_operacional(sc, alertas, limiar, dur_corretiva_h, campeao="LightGBM"):
+    """Antecipação, falsos positivos e benefício líquido de um limiar."""
+    pred = sc[campeao] >= limiar
+    al = alertas[alertas["Data_Alerta"] >= sc["t_decisao"].min()]
+    al = al[al["Data_Alerta"] <= sc["t_decisao"].max()
+            + pd.Timedelta(hours=JANELA_PREDICAO_HORAS)]
+    tp = sc[(sc["y"] == 1) & pred]
     janela = pd.Timedelta(hours=JANELA_PREDICAO_HORAS)
-    antecipados = 0
-    antecedencias = []
-    for linha in al_teste.itertuples(index=False):
+    antecipados, antecedencias = 0, []
+    for linha in al.itertuples(index=False):
         acertos = tp[(tp["Tag"] == linha.TAG)
                      & (tp["t_decisao"] >= linha.Data_Alerta - janela)
                      & (tp["t_decisao"] < linha.Data_Alerta)]
@@ -134,34 +147,61 @@ def impacto_negocio(sc_te, alertas, ap, limiar, campeao="LightGBM"):
             antecipados += 1
             antecedencias.append(
                 (linha.Data_Alerta - acertos["t_decisao"].min()).total_seconds() / 3600)
-
-    # A base registra classe única "Manutenção" e fatia atividades longas em
-    # ciclos de no máximo 60 min; a duração real da intervenção é a do
-    # EPISÓDIO: apontamentos consecutivos da mesma Tag com intervalo < 30 min.
-    manut = ap[ap["Classe"] == "Manutenção"].sort_values(["Tag", "Inicio"]).copy()
-    fim_anterior = manut.groupby("Tag")["Fim"].shift()
-    novo_episodio = (manut["Inicio"] - fim_anterior > pd.Timedelta("30min")) | fim_anterior.isna()
-    manut["_ep"] = novo_episodio.cumsum()
-    episodios = manut.groupby("_ep").agg(ini=("Inicio", "min"), fim=("Fim", "max"))
-    dur_corretiva_h = ((episodios["fim"] - episodios["ini"])
-                       .dt.total_seconds() / 3600).mean()
+    fp = int((~sc["y"].astype(bool) & pred).sum())
     horas_evitadas = antecipados * dur_corretiva_h * REDUCAO_PARADA_ANTECIPADA
-    fp = int((~sc["y"].astype(bool) & sc["pred"]).sum())
     beneficio = horas_evitadas * CUSTO_HORA_PARADA
     custo_fp = fp * CUSTO_INSPECAO
+    return dict(
+        alertas=len(al), antecipados=antecipados,
+        taxa=antecipados / max(len(al), 1),
+        antecedencia_mediana=float(np.median(antecedencias)) if antecedencias else np.nan,
+        horas_evitadas=horas_evitadas, fp=fp,
+        beneficio=beneficio, custo_fp=custo_fp, liquido=beneficio - custo_fp,
+    )
 
-    tab = pd.DataFrame([
-        ("Alertas don't go no teste (jun/2025)", len(al_teste)),
-        ("Alertas antecipados pelo modelo (≥1 acerto nas 4 h anteriores)", antecipados),
-        ("Taxa de antecipação", round(antecipados / max(len(al_teste), 1), 3)),
-        ("Antecedência mediana do 1º aviso (h)", round(float(np.median(antecedencias)), 2)),
-        ("Duração média da manutenção corretiva (h)", round(dur_corretiva_h, 2)),
-        ("Horas de parada não planejada evitadas (premissa 35%)", round(horas_evitadas, 1)),
-        ("Falsos positivos no mês (inspeções vazias)", fp),
-        ("Benefício bruto estimado (R$)", round(beneficio, 0)),
-        ("Custo das inspeções vazias (R$)", round(custo_fp, 0)),
-        ("Benefício líquido estimado no mês (R$)", round(beneficio - custo_fp, 0)),
-    ], columns=["Indicador", "Valor"])
+
+def limiar_custo_otimo(sc_va, alertas, dur_corretiva_h, campeao="LightGBM"):
+    """Limiar que maximiza o benefício líquido estimado NA VALIDAÇÃO.
+
+    O F2 maximiza captura sob custo assimétrico genérico; este ponto usa as
+    premissas financeiras explícitas do negócio. Escolhido na validação e
+    congelado antes de tocar o teste, como o limiar F2."""
+    candidatos = np.unique(np.quantile(sc_va[campeao], np.linspace(0.70, 0.999, 120)))
+    melhor_t, melhor_b = candidatos[0], -np.inf
+    for t in candidatos:
+        r = _resultado_operacional(sc_va, alertas, t, dur_corretiva_h, campeao)
+        if r["liquido"] > melhor_b:
+            melhor_b, melhor_t = r["liquido"], t
+    return float(melhor_t)
+
+
+def impacto_negocio(sc_va, sc_te, alertas, ap, limiar_f2, campeao="LightGBM"):
+    """Converte os dois pontos de operação (F2 e custo-ótimo) em horas e R$."""
+    dur_corretiva_h = _duracao_episodio_manutencao(ap)
+    limiar_rs = limiar_custo_otimo(sc_va, alertas, dur_corretiva_h, campeao)
+    r_f2 = _resultado_operacional(sc_te, alertas, limiar_f2, dur_corretiva_h, campeao)
+    r_rs = _resultado_operacional(sc_te, alertas, limiar_rs, dur_corretiva_h, campeao)
+
+    linhas = [
+        ("Limiar (escolhido na validação)", round(limiar_f2, 4), round(limiar_rs, 4)),
+        ("Alertas don't go no teste (jun/2025)", r_f2["alertas"], r_rs["alertas"]),
+        ("Alertas antecipados (≥1 acerto nas 4 h anteriores)",
+         r_f2["antecipados"], r_rs["antecipados"]),
+        ("Taxa de antecipação", round(r_f2["taxa"], 3), round(r_rs["taxa"], 3)),
+        ("Antecedência mediana do 1º aviso (h)",
+         round(r_f2["antecedencia_mediana"], 2), round(r_rs["antecedencia_mediana"], 2)),
+        ("Duração média do episódio de manutenção (h)",
+         round(dur_corretiva_h, 2), round(dur_corretiva_h, 2)),
+        ("Horas de parada não planejada evitadas (premissa 35%)",
+         round(r_f2["horas_evitadas"], 1), round(r_rs["horas_evitadas"], 1)),
+        ("Falsos positivos no mês (inspeções vazias)", r_f2["fp"], r_rs["fp"]),
+        ("Benefício bruto estimado (R$)", round(r_f2["beneficio"], 0), round(r_rs["beneficio"], 0)),
+        ("Custo das inspeções vazias (R$)", round(r_f2["custo_fp"], 0), round(r_rs["custo_fp"], 0)),
+        ("Benefício líquido estimado no mês (R$)",
+         round(r_f2["liquido"], 0), round(r_rs["liquido"], 0)),
+    ]
+    tab = pd.DataFrame(linhas,
+                       columns=["Indicador", "Ponto F2 (captura)", "Ponto custo-ótimo (R$)"])
     tab.to_csv(DIR_TABELAS / "impacto_negocio.csv", index=False)
     return tab
 

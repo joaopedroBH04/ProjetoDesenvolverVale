@@ -1,14 +1,14 @@
 TIPO,EVENTO,positivos,fn,taxa_fn
-ALARME OEM,Transmission Oil Level - Active,586,380,0.648
-ALARME OEM,Engine Coolant Level - Active,232,124,0.534
-ALARME OEM,Aftercooler Level - Active,121,106,0.876
-ALARME OEM,Right Rear Brake Temperature - Active,90,72,0.8
-ALARME OEM,Left Rear Brake Temperature - Active,78,62,0.795
-ALARME OEM,Right Front Brake Temperature - Active,480,62,0.129
-ALARME OEM,Left Exhaust Temperature - Active,59,41,0.695
-ALARME OEM,Engine Coolant Flow - Active,46,39,0.848
-ALARME OEM,Engine Oil Level - Active,48,38,0.792
-ALARME OEM,Left Front Brake Temperature - Active,40,27,0.675
+ALARME OEM,Transmission Oil Level - Active,586,274,0.468
+ALARME OEM,Aftercooler Level - Active,121,90,0.744
+ALARME OEM,Engine Coolant Level - Active,232,88,0.379
+ALARME OEM,Right Rear Brake Temperature - Active,90,60,0.667
+ALARME OEM,Left Rear Brake Temperature - Active,78,53,0.679
+ALARME OEM,Left Exhaust Temperature - Active,59,37,0.627
+ALARME OEM,Engine Coolant Flow - Active,46,36,0.783
+ALARME OEM,Engine Oil Level - Active,48,35,0.729
+ALARME OEM,Right Front Brake Temperature - Active,480,28,0.058
+ALARME OEM,Left Front Brake Temperature - Active,40,10,0.25
 ALARME OEM,Parking Brake - Active,9,8,0.889
 ALARME OEM,Hydraulic Reservoir Oil Temperature Critically High (L-1850),7,7,1.0
-ALARME OEM,Right Exhaust Temperature - Active,3,1,0.333
+ALARME OEM,Right Exhaust Temperature - Active,3,3,1.0

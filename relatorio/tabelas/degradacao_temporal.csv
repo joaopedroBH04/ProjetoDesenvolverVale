@@ -1,5 +1,5 @@
 Periodo,N,Prevalencia,AUC_ROC,AUC_PR
-mai/2025 (validação) — 1ª quinzena,27811,0.0385,0.8658,0.2829
-mai/2025 (validação) — 2ª quinzena,31143,0.0251,0.7653,0.0909
-jun/2025 (teste) — 1ª quinzena,26651,0.0291,0.86,0.2777
-jun/2025 (teste) — 2ª quinzena,28049,0.0365,0.8677,0.3503
+mai/2025 (validação) — 1ª quinzena,27811,0.0385,0.8662,0.2927
+mai/2025 (validação) — 2ª quinzena,31143,0.0251,0.7583,0.0893
+jun/2025 (teste) — 1ª quinzena,26651,0.0291,0.8625,0.2446
+jun/2025 (teste) — 2ª quinzena,28049,0.0365,0.8755,0.3368

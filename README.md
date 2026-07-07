@@ -8,10 +8,10 @@ O objetivo é antecipar alertas **don't go** — condições em que o equipament
 
 | Indicador | Valor |
 |---|---|
-| AUC-ROC / AUC-PR (LightGBM) | 0,864 / 0,317 (heurística de despacho: 0,750 / 0,245) |
-| Recall / Precisão no limiar operacional (F2) | 46,3% / 24,5% |
-| Alertas do mês antecipados | 139 de 229 (**60,7%**), mediana de 3,2 h de aviso |
-| Benefício líquido estimado | ~R$ 805 mil/mês (premissas no relatório) |
+| AUC-ROC (LightGBM) / AUC-PR (RF) | 0,870 / 0,320 (heurística de despacho: 0,750 / 0,245) |
+| Weibull AFT (sobrevivência) | C-index 0,781; risco em 4 h com AUC-ROC 0,841 |
+| Ponto de captura (limiar F2) | 68,6% dos 229 alertas antecipados, mediana 3,4 h de aviso |
+| Ponto custo-ótimo (limiar em R$) | precisão 41,9%, ~45 cartões/dia, **benefício líquido ~R$ 1,10 mi/mês** |
 
 Relatório completo em [`relatorio/Relatorio_Final.md`](relatorio/Relatorio_Final.md) (versão para entrega: `relatorio/Relatorio_Final.docx`).
 
@@ -32,11 +32,12 @@ src/
   regras/        motor de regras don't go (aplica o catálogo CMA à telemetria)
   features/      engenharia de features e tabela analítica (ABT)
   modelos/       baselines, Regressão Logística, Random Forest, LightGBM,
-                 Isolation Forest e K-Means
-  avaliacao/     métricas, limiar F2, análise de erros, drift e impacto de negócio
+                 Weibull AFT (sobrevivência), Isolation Forest e K-Means
+  avaliacao/     métricas, limiares F2 e custo-ótimo, análise de erros, drift
+                 e impacto de negócio
   viz/           figuras do relatório
 relatorio/
-  Relatorio_Final.md / .docx, figuras/ (13 figuras) e tabelas/ (16 tabelas em CSV)
+  Relatorio_Final.md / .docx, figuras/ (13 figuras) e tabelas/ (17 tabelas em CSV)
 executar_pipeline.py   pipeline completo, da extração ao material do relatório
 ```
 
@@ -53,6 +54,7 @@ Aponte a variável de ambiente `DADOS_BRUTOS_DIR` (ou o default em `src/config.p
 
 * **Rotulagem**: as 151 regras do catálogo CMA (TIPO + EVENTO + SITUACAO + QTD + TEMPO + NIVEL) foram compiladas em um motor de regras; interpretações e simplificações estão documentadas em `src/regras/motor_regras.py` e na seção 3.3 do relatório. Resultado: 1.974 alertas rotulados no semestre.
 * **Operador**: o extrato de apontamentos não traz operador; ele é derivado da telemetria por casamento temporal (`merge_asof`, tolerância 6 h) — decisão documentada no controle de alterações.
-* **Validação temporal**: treino jan–abr/2025, validação mai/2025 (tuning + limiar), teste jun/2025 tocado uma única vez. Nada de k-fold aleatório em série temporal.
-* **Métricas**: AUC-PR e F2 como primárias — classe positiva rara (4,89%) e custo assimétrico (falso negativo = parada não planejada; falso positivo = ~1 h de inspeção).
+* **Validação temporal**: treino jan–abr/2025, teste jun/2025 tocado uma única vez; **tuning em duas janelas** walk-forward (abr e mai) e target encodings estimados só em jan–mar — nenhuma estatística vê dados de validação. Nada de k-fold aleatório em série temporal.
+* **Métricas e limiares**: AUC-PR e F2 como primárias — classe positiva rara (4,89%) e custo assimétrico. Dois pontos de operação escolhidos na validação: captura (F2) e custo-ótimo (maximiza benefício líquido em R$ sob premissas explícitas).
+* **Sobrevivência**: Weibull AFT com censura à direita estima o tempo até o próximo alerta; fatores de aceleração convergem com o SHAP do classificador.
 * **Episódios de manutenção**: a base fatia atividades em ciclos de ≤60 min; durações reais são reconstruídas encadeando ciclos consecutivos (gap < 30 min) — essencial para o cálculo de impacto.

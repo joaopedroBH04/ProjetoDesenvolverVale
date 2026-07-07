@@ -27,7 +27,7 @@ from src.config import (CORTE_TREINO, CORTE_VALIDACAO, DIR_PROCESSADOS,
                         DIR_TABELAS)
 from src.etl import carga, extracao, transformacao
 from src.features import engenharia
-from src.modelos import nao_supervisionado, treinar
+from src.modelos import nao_supervisionado, sobrevivencia, treinar
 from src.regras import motor_regras
 from src.viz import figuras
 
@@ -144,6 +144,7 @@ def main():
 
     print("[5/7] Treinamento")
     modelos, scores = treinar.treinar_todos(abt)
+    aft, saida_aft, c_index, _ = sobrevivencia.weibull_aft(abt)
     iso, saida_iso = nao_supervisionado.isolation_forest(abt)
     km, perfil = nao_supervisionado.perfis_kmeans(abt)
     perfil.to_csv(DIR_TABELAS / "perfis_kmeans.csv", index=False)
@@ -153,18 +154,24 @@ def main():
     sc_te = scores["teste"]
     from sklearn.metrics import average_precision_score, roc_auc_score
     tab = avaliar.tabela_comparativa(sc_va, sc_te)
+    aft_linha = pd.DataFrame([dict(
+        Modelo="Weibull AFT (sobrevivência, risco em 4 h)", Conjunto="teste",
+        Precision=np.nan, Recall=np.nan, F1=np.nan, F2=np.nan,
+        AUC_ROC=round(roc_auc_score(saida_aft["y"], saida_aft["WeibullAFT"]), 4),
+        AUC_PR=round(average_precision_score(saida_aft["y"], saida_aft["WeibullAFT"]), 4),
+        Limiar=np.nan)])
     iso_linha = pd.DataFrame([dict(
         Modelo="IsolationForest (não supervisionado)", Conjunto="teste",
         Precision=np.nan, Recall=np.nan, F1=np.nan, F2=np.nan,
         AUC_ROC=round(roc_auc_score(saida_iso["y"], saida_iso["IsolationForest"]), 4),
         AUC_PR=round(average_precision_score(saida_iso["y"], saida_iso["IsolationForest"]), 4),
         Limiar=np.nan)])
-    pd.concat([tab, iso_linha], ignore_index=True).to_csv(
+    pd.concat([tab, aft_linha, iso_linha], ignore_index=True).to_csv(
         DIR_TABELAS / "comparativo_modelos.csv", index=False)
     mc, limiar = avaliar.matriz_confusao_campeao(sc_va, sc_te)
     avaliar.analise_falsos_negativos(sc_te, alertas, abt, limiar)
     avaliar.degradacao_temporal(sc_va, sc_te)
-    avaliar.impacto_negocio(sc_te, alertas, ap, limiar)
+    avaliar.impacto_negocio(sc_va, sc_te, alertas, ap, limiar)
     avaliar.fila_inspecao(sc_te)
 
     print("[7/7] Figuras e tabelas")
