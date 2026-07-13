@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import numpy as np
 import pandas as pd
 
-from src.avaliacao import avaliar
+from src.avaliacao import avaliar, robustez
 from src.config import (CORTE_TREINO, CORTE_VALIDACAO, DIR_PROCESSADOS,
                         DIR_TABELAS)
 from src.etl import carga, extracao, transformacao
@@ -92,8 +92,8 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
                                       / tab_frota["Horas_operadas"]).round(2)
     tab_frota.reset_index().to_csv(DIR_TABELAS / "taxa_alerta_por_frota.csv", index=False)
 
-    # comportamento do operador: taxa de alerta por operador (mín. 800 decisões)
-    op = (abt.groupby("Nome_Operador_Anon")
+    # comportamento do operador (derivado da Telemetria): taxa por operador
+    op = (abt.groupby("Operador_Turno")
           .agg(decisoes=("y", "size"), taxa_pct=("y", lambda s: 100 * s.mean()))
           .query("decisoes >= 800").sort_values("taxa_pct", ascending=False)
           .round(3).reset_index())
@@ -164,6 +164,22 @@ def main():
     avaliar.impacto_negocio(sc_te, alertas, ap, limiar)
     avaliar.fila_inspecao(sc_te)
 
+    print("[6b] Robustez: walk-forward, sensibilidade, calibração e custo")
+    wf = robustez.walk_forward(abt)
+    print(wf.to_string(index=False))
+    sens = robustez.sensibilidade_janela(abt)
+    print(sens.to_string(index=False))
+    tab_calib, resumo_calib = robustez.calibracao(sc_va, sc_te)
+    print(f"  Brier: bruto {resumo_calib['brier_bruto']:.4f} | "
+          f"calibrado {resumo_calib['brier_calibrado']:.4f} | "
+          f"base {resumo_calib['base']:.4f}")
+    tab_custo, limiar_otimo, beneficio_otimo = robustez.custo_limiar(
+        sc_te, alertas, ap, limiar)
+    print(f"  limiar F2={limiar:.4f} | ótimo financeiro={limiar_otimo:.4f} "
+          f"(R$ {beneficio_otimo:,.0f})")
+    subsist = robustez.recall_por_subsistema(sc_te, alertas, limiar)
+    print(subsist.to_string(index=False))
+
     print("[7/7] Figuras e tabelas")
     tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt)
     figuras.fig01_fluxo_operacional()
@@ -180,6 +196,8 @@ def main():
     X_te, _ = engenharia.matriz_xy(teste)
     figuras.fig11_12_shap(modelos["LightGBM"], X_te.reset_index(drop=True), sc_te)
     figuras.fig13_baseline_vs_modelos(tab)
+    figuras.fig14_calibracao(tab_calib, resumo_calib)
+    figuras.fig15_custo_limiar(tab_custo, limiar, limiar_otimo)
 
     print(f"\nPipeline concluído em {time.time() - t0:.0f}s")
     print(f"Figuras em relatorio/figuras | tabelas em relatorio/tabelas | "

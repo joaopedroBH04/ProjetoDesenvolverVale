@@ -106,7 +106,7 @@ def degradacao_temporal(sc_va, sc_te, campeao="LightGBM"):
         sc["quinzena"] = np.where(sc["t_decisao"].dt.day <= 15, "1ª quinzena", "2ª quinzena")
         for q, g in sc.groupby("quinzena"):
             linhas.append(dict(
-                Periodo=f"{nome} — {q}", N=len(g), Prevalencia=g["y"].mean(),
+                Periodo=f"{q} de {nome}", N=len(g), Prevalencia=g["y"].mean(),
                 AUC_ROC=roc_auc_score(g["y"], g[campeao]),
                 AUC_PR=average_precision_score(g["y"], g[campeao]),
             ))

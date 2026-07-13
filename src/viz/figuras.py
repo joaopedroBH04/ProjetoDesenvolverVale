@@ -72,9 +72,9 @@ def fig01_fluxo_operacional():
     _caixa(ax, 0.27, 0.55, 0.20, 0.34, "Telemetria embarcada",
            "Eventos OEM, tendências\ne sistema, com nível\n(1, 2, 3) e valor lido", AQUA)
     _caixa(ax, 0.53, 0.55, 0.20, 0.34, "Catálogo CMA\n",
-           "151 regras don't go\nTIPO + EVENTO +\nSITUACAO + QTD + TEMPO", AMARELO)
+           "151 regras don't go\nTIPO + EVENTO + SITUACAO\n+ QUANTIDADE + TEMPO", AMARELO)
     _caixa(ax, 0.79, 0.55, 0.20, 0.34, "Alerta don't go",
-           "Equipamento não deve\noperar — Muito Alto / Alto", CRITICO)
+           "Equipamento não deve\noperar: Muito Alto / Alto", CRITICO)
     _caixa(ax, 0.27, 0.06, 0.20, 0.30, "Despacho (dispatcher)",
            "Redireciona produção,\nretira equipamento\nde rota", VIOLETA)
     _caixa(ax, 0.53, 0.06, 0.20, 0.30, "Manutenção",
@@ -84,7 +84,7 @@ def fig01_fluxo_operacional():
     _seta(ax, 0.73, 0.72, 0.79, 0.72, "dispara")
     _seta(ax, 0.86, 0.55, 0.66, 0.36)
     _seta(ax, 0.84, 0.55, 0.40, 0.36)
-    ax.set_title("Figura 1 — Fluxo operacional: ciclo de apontamento → telemetria → alerta don't go",
+    ax.set_title("Figura 1: Fluxo operacional: ciclo de apontamento → telemetria → alerta don't go",
                  loc="left")
     _salvar(fig, "fig01_fluxo_operacional.png")
 
@@ -96,7 +96,7 @@ def fig02_volume_temporal(ap, tel):
     axes[0].fill_between(d1.index, d1.values, color=AZUL, alpha=0.25, linewidth=0)
     axes[0].plot(d1.index, d1.values, color=AZUL, linewidth=1.6)
     axes[0].set_ylabel("Apontamentos/dia")
-    axes[0].set_title("Figura 2 — Volume diário de registros (set/2025 a fev/2026)", loc="left")
+    axes[0].set_title("Figura 2: Volume diário de registros (set/2025 a fev/2026)", loc="left")
     d2 = tel.set_index("Data_Evento").resample("D").size()
     axes[1].fill_between(d2.index, d2.values, color=AQUA, alpha=0.25, linewidth=0)
     axes[1].plot(d2.index, d2.values, color=AQUA, linewidth=1.6)
@@ -132,7 +132,7 @@ def fig03_alertas_tipo_nivel(alertas):
                  edgecolor=SUPERFICIE, linewidth=1.5)
     axes[1].set_title("10 eventos que mais dispararam alertas", loc="left")
     axes[1].tick_params(axis="y", labelsize=7.2)
-    fig.suptitle("Figura 3 — Distribuição dos alertas don't go por tipo e criticidade",
+    fig.suptitle("Figura 3: Distribuição dos alertas don't go por tipo e criticidade",
                  x=0.01, ha="left", fontsize=10, fontweight="bold")
     _salvar(fig, "fig03_alertas_tipo_nivel.png")
 
@@ -153,7 +153,7 @@ def fig04_serie_alertas(alertas):
     ax.set_ylabel("Alertas don't go/dia")
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b/%y"))
     ax.legend(loc="upper left", fontsize=8)
-    ax.set_title("Figura 4 — Frequência diária de alertas don't go no período analisado",
+    ax.set_title("Figura 4: Frequência diária de alertas don't go no período analisado",
                  loc="left")
     _salvar(fig, "fig04_serie_alertas.png")
 
@@ -178,7 +178,7 @@ def fig05_heatmap_correlacao(abt):
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center", fontsize=5.8,
                         color="white" if abs(v) > 0.62 else TINTA)
     fig.colorbar(im, ax=ax, shrink=0.75, label="Correlação de Spearman")
-    ax.set_title("Figura 5 — Correlação entre features numéricas e o target (y)",
+    ax.set_title("Figura 5: Correlação entre features numéricas e o target (y)",
                  loc="left")
     _salvar(fig, "fig05_heatmap_correlacao.png")
 
@@ -198,7 +198,7 @@ def fig06_taxa_hora_dia(abt):
     ax.text(18.5, -0.85, "Turno B (15–23)", ha="center", fontsize=7.4, color=TINTA3)
     ax.text(3, -0.85, "Turno C (23–07)", ha="center", fontsize=7.4, color=TINTA3)
     fig.colorbar(im, ax=ax, shrink=0.85, label="Taxa de alerta em 4 h (%)")
-    ax.set_title("Figura 6 — Taxa de alertas por hora do dia e dia da semana",
+    ax.set_title("Figura 6: Taxa de alertas por hora do dia e dia da semana",
                  loc="left", pad=26)
     _salvar(fig, "fig06_taxa_hora_dia.png")
 
@@ -222,7 +222,7 @@ def fig07_janela_predicao():
     ax.text(7, 0.50, "histórico usado nas features\n(janelas de 4 h a 72 h)", ha="center",
             fontsize=8, color=TINTA2)
     ax.text(20.7, 0.50, "futuro não observado", ha="center", fontsize=7.6, color=TINTA3)
-    ax.set_title("Figura 7 — Janela de predição: decisão → antecipação → evento alvo",
+    ax.set_title("Figura 7: Janela de predição: decisão → antecipação → evento alvo",
                  loc="left")
     _salvar(fig, "fig07_janela_predicao.png")
 
@@ -231,9 +231,9 @@ def fig07_janela_predicao():
 def fig08_validacao_temporal():
     fig, ax = plt.subplots(figsize=(9.2, 2.4))
     ax.set_xlim(0, 12); ax.set_ylim(0, 1); ax.axis("off")
-    seg = [("Treino — set a dez/2025 (67%)", 0, 8, AZUL),
-           ("Validação — jan/2026 (17%)", 8, 2, AMARELO),
-           ("Teste — fev/2026 (16%)", 10, 2, VERMELHO)]
+    seg = [("Treino: set a dez/2025 (67%)", 0, 8, AZUL),
+           ("Validação: jan/2026 (17%)", 8, 2, AMARELO),
+           ("Teste: fev/2026 (16%)", 10, 2, VERMELHO)]
     for rotulo, x, w, cor in seg:
         ax.add_patch(plt.Rectangle((x + 0.03, 0.38), w - 0.06, 0.24, color=cor,
                                    alpha=0.85))
@@ -246,7 +246,7 @@ def fig08_validacao_temporal():
     ax.text(6, 0.82, "tuning de hiperparâmetros e escolha de limiar usam apenas a validação;"
                      " o teste é avaliado uma única vez", ha="center", fontsize=8,
             color=TINTA2, style="italic")
-    ax.set_title("Figura 8 — Estratégia de validação: hold-out temporal (sem embaralhar o tempo)",
+    ax.set_title("Figura 8: Estratégia de validação: hold-out temporal (sem embaralhar o tempo)",
                  loc="left")
     _salvar(fig, "fig08_validacao_temporal.png")
 
@@ -271,15 +271,15 @@ def fig09_roc_pr(sc_te):
                      label=f"{rotulos[m]} (AP={ap:.3f})")
     axes[0].plot([0, 1], [0, 1], color=GRADE, linewidth=1, linestyle="--")
     axes[0].set_xlabel("Taxa de falsos positivos"); axes[0].set_ylabel("Recall")
-    axes[0].set_title("Curva ROC — teste (fev/2026)", loc="left")
+    axes[0].set_title("Curva ROC no teste (fev/2026)", loc="left")
     axes[0].legend(fontsize=7.2, loc="lower right")
     axes[1].axhline(sc_te["y"].mean(), color=GRADE, linewidth=1, linestyle="--")
     axes[1].text(0.02, sc_te["y"].mean() + 0.012, "prevalência (aleatório)",
                  fontsize=7, color=TINTA3)
     axes[1].set_xlabel("Recall"); axes[1].set_ylabel("Precision")
-    axes[1].set_title("Curva Precision-Recall — teste", loc="left")
+    axes[1].set_title("Curva Precision-Recall no teste", loc="left")
     axes[1].legend(fontsize=7.2, loc="upper right")
-    fig.suptitle("Figura 9 — Curvas ROC e Precision-Recall dos modelos avaliados",
+    fig.suptitle("Figura 9: Curvas ROC e Precision-Recall dos modelos avaliados",
                  x=0.01, ha="left", fontsize=10, fontweight="bold")
     _salvar(fig, "fig09_roc_pr.png")
 
@@ -303,7 +303,7 @@ def fig10_matriz_confusao(mc):
             ax.text(j, i + 0.16, notas[i][j], ha="center", fontsize=8, color=cor)
     ax.set_xticks([0, 1], ["Previsto: sem alerta", "Previsto: alerta"], fontsize=9)
     ax.set_yticks([0, 1], ["Real:\nsem alerta", "Real:\nalerta"], fontsize=9)
-    ax.set_title("Figura 10 — Matriz de confusão no teste (LightGBM, limiar F2)",
+    ax.set_title("Figura 10: Matriz de confusão no teste (LightGBM, limiar F2)",
                  loc="left")
     _salvar(fig, "fig10_matriz_confusao.png")
 
@@ -316,7 +316,7 @@ def fig11_12_shap(modelo, X_te, sc_te):
     sv = explainer(amostra)
     plt.figure(figsize=(8.4, 6.0))
     shap.summary_plot(sv, amostra, max_display=14, show=False, plot_size=None)
-    plt.gcf().suptitle("Figura 11 — SHAP summary plot (LightGBM, amostra do teste)",
+    plt.gcf().suptitle("Figura 11: SHAP summary plot (LightGBM, amostra do teste)",
                        x=0.01, ha="left", fontsize=10, fontweight="bold")
     plt.tight_layout()
     plt.savefig(DIR_FIGURAS / "fig11_shap_summary.png", bbox_inches="tight")
@@ -329,7 +329,7 @@ def fig11_12_shap(modelo, X_te, sc_te):
     sv1 = explainer(X_te.loc[[idx]])
     plt.figure(figsize=(8.4, 5.2))
     shap.plots.waterfall(sv1[0], max_display=12, show=False)
-    plt.gcf().suptitle("Figura 12 — SHAP waterfall: decomposição de uma predição\n"
+    plt.gcf().suptitle("Figura 12: SHAP waterfall: decomposição de uma predição\n"
                        f"(equipamento {pos['Tag'].iloc[0]}, "
                        f"{pos['t_decisao'].iloc[0]:%d/%m/%Y %H:%M}, alerta real em < 4 h)",
                        x=0.01, ha="left", fontsize=9.5, fontweight="bold")
@@ -337,6 +337,45 @@ def fig11_12_shap(modelo, X_te, sc_te):
     plt.savefig(DIR_FIGURAS / "fig12_shap_waterfall.png", bbox_inches="tight")
     plt.close("all")
     print("  figura salva: fig12_shap_waterfall.png")
+
+
+# ---------------------------------------------------------------- Figura 14
+def fig14_calibracao(tab_calib, resumo):
+    fig, ax = plt.subplots(figsize=(6.2, 4.6))
+    lim = max(tab_calib["taxa_observada"].max(),
+              tab_calib["score_medio_bruto"].max()) * 1.15
+    ax.plot([0, lim], [0, lim], color=GRADE, linewidth=1.2, linestyle="--")
+    ax.plot(tab_calib["score_medio_bruto"], tab_calib["taxa_observada"],
+            marker="o", markersize=6, linewidth=1.6, color=AZUL,
+            label=f"Score bruto (Brier {resumo['brier_bruto']:.4f})")
+    ax.plot(tab_calib["score_medio_calibrado"], tab_calib["taxa_observada"],
+            marker="s", markersize=5, linewidth=1.6, color=AQUA,
+            label=f"Isotônica (Brier {resumo['brier_calibrado']:.4f})")
+    ax.set_xlabel("Probabilidade prevista (média do decil)")
+    ax.set_ylabel("Taxa de alerta observada")
+    ax.legend(fontsize=8, loc="upper left")
+    ax.set_title("Figura 14: Calibração de probabilidade no teste (decis de score)",
+                 loc="left")
+    _salvar(fig, "fig14_calibracao.png")
+
+
+# ---------------------------------------------------------------- Figura 15
+def fig15_custo_limiar(tab_custo, limiar_f2, limiar_otimo):
+    fig, ax = plt.subplots(figsize=(9.2, 3.8))
+    ax.plot(tab_custo["limiar"], tab_custo["beneficio_liquido"] / 1e6,
+            color=AZUL, linewidth=2.0)
+    ax.axhline(0, color=EIXO, linewidth=0.8)
+    for x, rotulo, cor in ((limiar_f2, "limiar F2 (operacional)", VERMELHO),
+                           (limiar_otimo, "ótimo financeiro", VERDE)):
+        ax.axvline(x, color=cor, linewidth=1.3, linestyle="--")
+        y_txt = ax.get_ylim()[1] * (0.88 if cor == VERMELHO else 0.72)
+        ax.text(x * 1.05, y_txt, rotulo, fontsize=8, color=cor)
+    ax.set_xscale("log")
+    ax.set_xlabel("Limiar de decisão (escala log)")
+    ax.set_ylabel("Benefício líquido no mês (R$ milhões)")
+    ax.set_title("Figura 15: Benefício líquido estimado em função do limiar de decisão",
+                 loc="left")
+    _salvar(fig, "fig15_custo_limiar.png")
 
 
 # ---------------------------------------------------------------- Figura 13
@@ -358,6 +397,6 @@ def fig13_baseline_vs_modelos(tab):
         ax.set_xticks(x, rotulos, fontsize=7.4)
         ax.set_ylim(0, min(1.0, t[met].max() * 1.25))
         ax.set_title(titulo, loc="left")
-    fig.suptitle("Figura 13 — Baseline vs. modelos desenvolvidos (teste, fev/2026)",
+    fig.suptitle("Figura 13: Baseline vs. modelos desenvolvidos (teste, fev/2026)",
                  x=0.01, ha="left", fontsize=10, fontweight="bold")
     _salvar(fig, "fig13_baseline_vs_modelos.png")
