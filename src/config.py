@@ -11,9 +11,9 @@ DIR_PROCESSADOS = RAIZ / "dados" / "processados"
 DIR_FIGURAS = RAIZ / "relatorio" / "figuras"
 DIR_TABELAS = RAIZ / "relatorio" / "tabelas"
 
-ARQ_APONTAMENTOS = DIR_BRUTOS / "Apontamentos.csv.gz"
-ARQ_TELEMETRIA = DIR_BRUTOS / "Telemetria.csv.gz"
-ARQ_ALARMES = DIR_NEGOCIO / "Alarmes - SUL_SUDESTE.xlsx"
+ARQ_APONTAMENTOS = DIR_BRUTOS / "Apontamentos.parquet"
+ARQ_TELEMETRIA = DIR_BRUTOS / "Telemetria.parquet"
+ARQ_ALARMES = DIR_NEGOCIO / "Alarmes - Regra de Negocio_V2.xlsx"
 ARQ_DICIONARIO = DIR_NEGOCIO / "Dicionario_Dados.xlsx"
 
 # Janela de antecipação do alerta don't go (horas).

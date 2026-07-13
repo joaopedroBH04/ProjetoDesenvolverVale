@@ -68,15 +68,6 @@ def limpar_apontamentos(df: pd.DataFrame) -> pd.DataFrame:
          "Um equipamento não executa dois apontamentos simultâneos; assume-se "
          "atraso no fechamento do ciclo anterior.")
 
-    # 6) Operador ausente — mantém o registro (as horas operadas importam)
-    qtd = df["Nome_Operador_Anon"].isna().sum()
-    df["Nome_Operador_Anon"] = df["Nome_Operador_Anon"].fillna("OP_DESCONHECIDO")
-    df["Matricula_Operador_Hash"] = df["Matricula_Operador_Hash"].fillna("desconhecido")
-    _log("Apontamentos", "Nome_Operador_Anon", "Operador não informado", qtd,
-         "Imputação com categoria 'OP_DESCONHECIDO'",
-         "Excluir descartaria horas de operação válidas; a ausência vira categoria "
-         "própria e o modelo decide sua relevância.")
-
     df["duracao_min"] = (df["Fim"] - df["Inicio"]).dt.total_seconds() / 60
     return df.sort_values(["Tag", "Inicio"]).reset_index(drop=True)
 
@@ -107,7 +98,8 @@ def limpar_telemetria(df: pd.DataFrame) -> pd.DataFrame:
     df["Matricula_Operador_Hash"] = df["Matricula_Operador_Hash"].fillna("desconhecido")
     _log("Telemetria", "Nome_Operador_Anon", "Operador não informado", qtd,
          "Imputação com categoria 'OP_DESCONHECIDO'",
-         "Mesmo critério adotado nos apontamentos.")
+         "Excluir descartaria eventos válidos; a ausência vira categoria própria "
+         "e o modelo decide sua relevância.")
 
     # 4) Normalização do nome do evento para casar com o catálogo CMA
     df["Alarme_Norm"] = df["Alarme"].str.strip().str.upper()

@@ -9,6 +9,10 @@ Todas as features usam exclusivamente informação disponível até o instante d
 decisão t (contagens em janelas retroativas, tempos "desde o último ..."),
 evitando vazamento temporal. Encodings dependentes da taxa de alerta
 (equipamento e operador) são estimados apenas no período de treino.
+
+Conforme o dicionário de dados revisado, a tabela Apontamentos não carrega o
+operador; o operador em turno é derivado da Telemetria, tomando o último
+evento do equipamento até o instante de decisão.
 """
 
 import numpy as np
@@ -98,6 +102,12 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
             cols[f"n_dg_{h}h"] = _contagem_retroativa(ts_dg, t_dec, h)
         cols["n_tendencia_24h"] = _contagem_retroativa(ts_tend, t_dec, 24)
         cols["n_eventos_24h"] = _contagem_retroativa(ts_todos, t_dec, 24)
+
+        # operador em turno: último evento de telemetria do equipamento até t
+        ops = tel_tag["Nome_Operador_Anon"].to_numpy()
+        idx_op = np.searchsorted(ts_todos, t_dec, side="right") - 1
+        operador = np.where(idx_op >= 0, ops[np.maximum(idx_op, 0)],
+                            "OP_DESCONHECIDO")
         cols["quase_gatilhos_12h"] = _contagem_retroativa(ts_qg, t_dec, 12)
         cols["quase_gatilhos_24h"] = _contagem_retroativa(ts_qg, t_dec, 24)
         cols["h_desde_crit1"] = _horas_desde_ultimo(ts_por_crit[1], t_dec)
@@ -139,8 +149,9 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
             cols["y"] = np.zeros(len(t_dec), dtype=np.int8)
             cols["horas_ate_alerta"] = np.full(len(t_dec), 24 * 21, dtype=np.float32)
 
-        bloco = grupo[["Tag", "Frota", "Tipo", "Classe", "Nome_Operador_Anon",
+        bloco = grupo[["Tag", "Frota", "Tipo", "Classe",
                        "Fim", "duracao_min", "razao_duracao"]].reset_index(drop=True)
+        bloco["Operador_Turno"] = operador
         blocos.append(pd.concat([bloco, pd.DataFrame(cols)], axis=1))
 
     abt = pd.concat(blocos, ignore_index=True).rename(columns={"Fim": "t_decisao"})
@@ -178,10 +189,10 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
 
     abt["tag_taxa_alerta"] = abt["Tag"].map(_te("Tag")).fillna(taxa_global).astype(np.float32)
     abt["op_taxa_alerta"] = (
-        abt["Nome_Operador_Anon"].map(_te("Nome_Operador_Anon"))
+        abt["Operador_Turno"].map(_te("Operador_Turno"))
         .fillna(taxa_global).astype(np.float32)
     )
-    abt["op_desconhecido"] = (abt["Nome_Operador_Anon"] == "OP_DESCONHECIDO").astype(np.int8)
+    abt["op_desconhecido"] = (abt["Operador_Turno"] == "OP_DESCONHECIDO").astype(np.int8)
 
     # nomes de coluna sem espaços/acentos (compatibilidade com LightGBM)
     tabela = str.maketrans("áàâãéêíóôõúç ", "aaaaeeiooouc_", "()-°")
@@ -197,7 +208,7 @@ def separar_conjuntos(abt: pd.DataFrame, corte_treino: str, corte_validacao: str
     return treino, valid, teste
 
 
-COLUNAS_NAO_FEATURE = ["Tag", "Nome_Operador_Anon", "t_decisao", "y", "horas_ate_alerta"]
+COLUNAS_NAO_FEATURE = ["Tag", "Operador_Turno", "t_decisao", "y", "horas_ate_alerta"]
 
 
 def matriz_xy(df: pd.DataFrame):

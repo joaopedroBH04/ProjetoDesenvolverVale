@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """Motor de regras don't go.
 
-Aplica o catálogo CMA (Alarmes - SUL_SUDESTE.xlsx) sobre a telemetria limpa.
-Cada regra é uma combinação TIPO + EVENTO + SITUACAO + QTD + TEMPO + NIVEL:
-o alerta dispara quando QTD ocorrências do EVENTO, no nível exigido pela
-SITUACAO, acontecem dentro de TEMPO minutos para o mesmo equipamento.
+Aplica o catálogo CMA (aba CMA do arquivo "Alarmes - Regra de Negocio_V2.xlsx")
+sobre a telemetria limpa. Cada regra é uma combinação TIPO + EVENTO + SITUACAO
++ QUANTIDADE + TEMPO + NIVEL: o alerta dispara quando QUANTIDADE ocorrências do
+EVENTO, no nível exigido pela SITUACAO, acontecem dentro de TEMPO minutos para
+o mesmo equipamento.
+
+A coluna Is_Dont_Go da telemetria NÃO é usada como rótulo: ela apenas indica
+que o nome do alarme consta na lista don't go (pré-filtro de elegibilidade).
+O rótulo oficial é recalculado aqui a partir das regras da CMA, porque uma
+ocorrência isolada de um evento listado não constitui alerta quando a regra
+exige repetição dentro da janela de tempo.
 
 Interpretação adotada (registrada como decisão metodológica):
   * "Mediante alarme nível 3"            -> eventos com Id_Criticidade = 1
@@ -49,7 +56,7 @@ def compilar_regras(cma: pd.DataFrame) -> pd.DataFrame:
     regras = cma.copy()
     regras["niveis"] = regras["SITUACAO"].map(_niveis_da_situacao)
     regras["janela_min"] = regras["TEMPO"].astype(int)
-    regras["qtd_min"] = regras["QTD"].astype(int).clip(lower=1)
+    regras["qtd_min"] = regras["QUANTIDADE"].astype(int).clip(lower=1)
     return regras
 
 
