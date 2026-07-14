@@ -83,8 +83,11 @@ def limpar_telemetria(df: pd.DataFrame) -> pd.DataFrame:
          "Mesma chave Id_Eventos_Telemetria e mesmo conteúdo; contagem dupla "
          "distorceria as regras de QTD do catálogo.")
 
-    # 2) Valor não numérico ("N/A", vazio) — converte para NaN e mantém a linha
-    valor_num = pd.to_numeric(df["Valor"], errors="coerce")
+    # 2) Valor não numérico ("NULL", vazio) — converte para NaN e mantém a
+    # linha; a origem usa vírgula como separador decimal ("43,79")
+    valor_num = pd.to_numeric(
+        df["Valor"].astype(str).str.replace(",", ".", regex=False),
+        errors="coerce")
     qtd = (df["Valor"].notna() & valor_num.isna()).sum() + df["Valor"].isna().sum()
     df["Valor"] = valor_num
     _log("Telemetria", "Valor", "Valor ausente ou não numérico ('N/A')", qtd,

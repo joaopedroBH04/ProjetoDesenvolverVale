@@ -18,7 +18,7 @@ evento do equipamento até o instante de decisão.
 import numpy as np
 import pandas as pd
 
-from src.config import CORTE_TREINO, JANELA_PREDICAO_HORAS
+from src.config import CORTE_JANELA_A, JANELA_PREDICAO_HORAS
 
 JANELAS_H = [4, 12, 24, 72]
 
@@ -121,7 +121,7 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
         ).astype(np.float32)
 
         # utilização: ciclos e horas de operação nas últimas 24 h
-        oper = grupo[grupo["Classe"] == "Operação"]
+        oper = grupo[grupo["Classe"] == "Operando"]
         ts_fim_oper = oper["Fim"].to_numpy()
         dur_oper = oper["duracao_min"].to_numpy() / 60.0
         cum = np.concatenate([[0.0], np.cumsum(dur_oper)])
@@ -130,11 +130,11 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
         cols["horas_operadas_24h"] = (cum[fim_idx] - cum[ini_idx]).astype(np.float32)
         cols["ciclos_24h"] = _contagem_retroativa(grupo["Fim"].to_numpy(), t_dec, 24)
 
+        # a base de apontamentos registra uma única classe "Manutenção"
+        # (sem separar corretiva/preventiva)
         m_tag = manut[manut["Tag"] == tag]
-        cols["h_desde_manut_corretiva"] = _horas_desde_ultimo(
-            m_tag.loc[m_tag["Classe"] == "Manutenção Corretiva", "Fim"].to_numpy(), t_dec)
-        cols["h_desde_manut_preventiva"] = _horas_desde_ultimo(
-            m_tag.loc[m_tag["Classe"] == "Manutenção Preventiva", "Fim"].to_numpy(), t_dec)
+        cols["h_desde_manutencao"] = _horas_desde_ultimo(
+            m_tag["Fim"].to_numpy(), t_dec)
 
         # target: alerta don't go em (t, t + janela]
         if len(ts_alerta):
@@ -163,9 +163,9 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
     abt["dia_semana"] = abt["t_decisao"].dt.dayofweek.astype(np.int8)
     abt["fim_de_semana"] = (abt["dia_semana"] >= 5).astype(np.int8)
     abt["mes"] = abt["t_decisao"].dt.month.astype(np.int8)
-    abt["turno"] = pd.cut(abt["hora"], bins=[-1, 6, 14, 22, 24],
-                          labels=["C", "A", "B", "C2"]).astype(str)
-    abt.loc[abt["turno"] == "C2", "turno"] = "C"
+    # dois turnos de 12 h, conforme Inicio_Turno/Fim_Turno da telemetria
+    # (A: 06–18 h, B: 18–06 h)
+    abt["turno"] = np.where((abt["hora"] >= 6) & (abt["hora"] < 18), "A", "B")
 
     # -------------------------------------------------- encodings categóricos
     # One-hot para baixa cardinalidade (Frota, Tipo, Classe, turno).
@@ -174,10 +174,12 @@ def construir_abt(ap: pd.DataFrame, tel: pd.DataFrame, alertas: pd.DataFrame,
         dtype=np.int8,
     )
 
-    # Frequência/target encoding APENAS com o período de treino para Tag e
-    # Operador (cardinalidade alta demais para one-hot; taxa histórica carrega
-    # o sinal de "equipamento problemático" / "estilo de operação").
-    corte = pd.Timestamp(CORTE_TREINO)
+    # Frequência/target encoding para Tag e Operador (cardinalidade alta
+    # demais para one-hot; taxa histórica carrega o sinal de "equipamento
+    # problemático" / "estilo de operação"). Estimado APENAS em jan–mar,
+    # período anterior às duas janelas de tuning (abr e mai) e ao teste —
+    # nenhuma estatística vê dados de validação.
+    corte = pd.Timestamp(CORTE_JANELA_A)
     treino = abt[abt["t_decisao"] < corte]
     taxa_global = treino["y"].mean()
 

@@ -1,10 +1,11 @@
 Tabela,Campo,Problema,Qtd_Registros,Tratamento,Justificativa
-Apontamentos,todas,Registro duplicado (reenvio do despacho),728,Remoção (mantida 1ª ocorrência),"Linhas idênticas em todos os campos, inclusive Id; não agregam informação."
-Apontamentos,Inicio/Fim,Inicio posterior ao Fim,439,Troca dos campos,Padrão consistente com inversão de colunas na origem; duração resultante fica dentro da distribuição normal da classe.
-Apontamentos,Inicio/Fim,Ciclo com duração zero,1187,Remoção,Sem conteúdo operacional; não representam atividade nem parada.
-Apontamentos,Fim,Duração > 24 h (data de fechamento incorreta),157,Remoção,"Acima do turno máximo possível; corrigir a data seria especulativo e o volume é irrelevante (<0,1%)."
-Apontamentos,Fim,Sobreposição de ciclos na mesma Tag,1,Fim truncado no início do ciclo seguinte,Um equipamento não executa dois apontamentos simultâneos; assume-se atraso no fechamento do ciclo anterior.
-Telemetria,todas,Evento duplicado (reprocessamento do coletor),967,Remoção (mantida 1ª ocorrência),Mesma chave Id_Eventos_Telemetria e mesmo conteúdo; contagem dupla distorceria as regras de QTD do catálogo.
-Telemetria,Valor,Valor ausente ou não numérico ('N/A'),178570,"Coerção para NaN, linha mantida","O disparo das regras depende do evento e do nível, não do Valor; imputar leitura de sensor inexistente criaria informação falsa."
-Telemetria,Nome_Operador_Anon,Operador não informado,644,Imputação com categoria 'OP_DESCONHECIDO',Excluir descartaria eventos válidos; a ausência vira categoria própria e o modelo decide sua relevância.
+Apontamentos,todas,Registro duplicado (reenvio do despacho),0,Remoção (mantida 1ª ocorrência),"Linhas idênticas em todos os campos, inclusive Id; não agregam informação."
+Apontamentos,Inicio/Fim,Inicio posterior ao Fim,0,Troca dos campos,Padrão consistente com inversão de colunas na origem; duração resultante fica dentro da distribuição normal da classe.
+Apontamentos,Inicio/Fim,Ciclo com duração zero,0,Remoção,Sem conteúdo operacional; não representam atividade nem parada.
+Apontamentos,Fim,Duração > 24 h (data de fechamento incorreta),0,Remoção,"Acima do turno máximo possível; corrigir a data seria especulativo e o volume é irrelevante (<0,1%)."
+Apontamentos,Fim,Sobreposição de ciclos na mesma Tag,326,Fim truncado no início do ciclo seguinte,Um equipamento não executa dois apontamentos simultâneos; assume-se atraso no fechamento do ciclo anterior.
+Apontamentos,Nome_Operador_Anon,Operador não informado,70132,Imputação com categoria 'OP_DESCONHECIDO',Excluir descartaria horas de operação válidas; a ausência vira categoria própria e o modelo decide sua relevância.
+Telemetria,todas,Evento duplicado (reprocessamento do coletor),0,Remoção (mantida 1ª ocorrência),Mesma chave Id_Eventos_Telemetria e mesmo conteúdo; contagem dupla distorceria as regras de QTD do catálogo.
+Telemetria,Valor,Valor ausente ou não numérico ('N/A'),237443,"Coerção para NaN, linha mantida","O disparo das regras depende do evento e do nível, não do Valor; imputar leitura de sensor inexistente criaria informação falsa."
+Telemetria,Nome_Operador_Anon,Operador não informado,0,Imputação com categoria 'OP_DESCONHECIDO',Mesmo critério adotado nos apontamentos.
 Catálogo CMA,NIVEL,Grafias inconsistentes ('Muito alto'/'Muito Alto'),6,Padronização para title case,"As 3 grafias distintas de NIVEL viram 2 categorias reais (Muito Alto, Alto); sem isso a agregação por criticidade dupla conta os mesmos eventos."

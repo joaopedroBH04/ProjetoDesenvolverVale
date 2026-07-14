@@ -1,11 +1,12 @@
-Indicador,Valor
-Alertas don't go no teste (fev/2026),188.0
-Alertas antecipados pelo modelo (≥1 acerto nas 4 h anteriores),136.0
-Taxa de antecipação,0.723
-Antecedência mediana do 1º aviso (h),3.47
-Duração média da manutenção corretiva (h),6.75
-Horas de parada não planejada evitadas (premissa 35%),321.3
-Falsos positivos no mês (inspeções vazias),1199.0
-Benefício bruto estimado (R$),1927727.0
-Custo das inspeções vazias (R$),539550.0
-Benefício líquido estimado no mês (R$),1388177.0
+Indicador,Ponto F2 (captura),Ponto custo-ótimo (R$)
+Limiar (escolhido na validação),0.0622,0.0745
+Alertas don't go no teste (jun/2025),229.0,229.0
+Alertas antecipados (≥1 acerto nas 4 h anteriores),157.0,103.0
+Taxa de antecipação,0.686,0.45
+Antecedência mediana do 1º aviso (h),3.35,3.07
+Duração média do episódio de manutenção (h),6.72,6.72
+Horas de parada não planejada evitadas (premissa 35%),369.0,242.1
+Falsos positivos no mês (inspeções vazias),4655.0,779.0
+Benefício bruto estimado (R$),2214038.0,1452522.0
+Custo das inspeções vazias (R$),2094750.0,350550.0
+Benefício líquido estimado no mês (R$),119288.0,1101972.0

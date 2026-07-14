@@ -22,12 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 import numpy as np
 import pandas as pd
 
-from src.avaliacao import avaliar, robustez
+from src.avaliacao import avaliar
 from src.config import (CORTE_TREINO, CORTE_VALIDACAO, DIR_PROCESSADOS,
                         DIR_TABELAS)
 from src.etl import carga, extracao, transformacao
 from src.features import engenharia
-from src.modelos import nao_supervisionado, treinar
+from src.modelos import nao_supervisionado, sobrevivencia, treinar
 from src.regras import motor_regras
 from src.viz import figuras
 
@@ -52,7 +52,9 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
         duracao_min=(ap_bruto["Fim"] - ap_bruto["Inicio"]).dt.total_seconds() / 60)
     fontes = [("Apontamentos", ap_num, ["duracao_min"]),
               ("Telemetria", tel_bruto.assign(
-                  Valor=pd.to_numeric(tel_bruto["Valor"], errors="coerce")),
+                  Valor=pd.to_numeric(
+                      tel_bruto["Valor"].astype(str).str.replace(",", ".", regex=False),
+                      errors="coerce")),
                ["Valor", "Id_Criticidade", "Is_Dont_Go", "Dia"])]
     for tabela, df, cols in fontes:
         for c in cols:
@@ -77,7 +79,7 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
     frota_cols = [c for c in abt.columns if c.startswith("frota_")]
     fr = abt[["Tag", "y", "horas_operadas_24h"]].copy()
     fr["Frota"] = abt[frota_cols].idxmax(axis=1).str.replace("frota_", "", regex=False)
-    horas_op = ap[ap["Classe"] == "Operação"].groupby("Tag")["duracao_min"].sum() / 60
+    horas_op = ap[ap["Classe"] == "Operando"].groupby("Tag")["duracao_min"].sum() / 60
     mapa_frota = fr.drop_duplicates("Tag").set_index("Tag")["Frota"]
     al = alertas.copy()
     al["Frota"] = al["TAG"].map(mapa_frota)
@@ -99,9 +101,9 @@ def tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt):
           .round(3).reset_index())
     op.to_csv(DIR_TABELAS / "taxa_alerta_por_operador.csv", index=False)
 
-    # turno
+    # turno (dois turnos de 12 h nesta operação)
     turnos = []
-    for t in ("A", "B", "C"):
+    for t in ("A", "B"):
         col = f"turno_{t}"
         sub = abt[abt[col] == 1]
         turnos.append(dict(Turno=t, Pontos=len(sub),
@@ -115,6 +117,7 @@ def main():
     print("[1/7] Extração")
     ap_bruto = extracao.carregar_apontamentos()
     tel_bruto = extracao.carregar_telemetria()
+    ap_bruto = extracao.enriquecer_apontamentos_com_operador(ap_bruto, tel_bruto)
     cma = extracao.carregar_catalogo_alarmes()
 
     print("[2/7] Transformação e carga")
@@ -141,6 +144,7 @@ def main():
 
     print("[5/7] Treinamento")
     modelos, scores = treinar.treinar_todos(abt)
+    aft, saida_aft, c_index, _ = sobrevivencia.weibull_aft(abt)
     iso, saida_iso = nao_supervisionado.isolation_forest(abt)
     km, perfil = nao_supervisionado.perfis_kmeans(abt)
     perfil.to_csv(DIR_TABELAS / "perfis_kmeans.csv", index=False)
@@ -150,35 +154,25 @@ def main():
     sc_te = scores["teste"]
     from sklearn.metrics import average_precision_score, roc_auc_score
     tab = avaliar.tabela_comparativa(sc_va, sc_te)
+    aft_linha = pd.DataFrame([dict(
+        Modelo="Weibull AFT (sobrevivência, risco em 4 h)", Conjunto="teste",
+        Precision=np.nan, Recall=np.nan, F1=np.nan, F2=np.nan,
+        AUC_ROC=round(roc_auc_score(saida_aft["y"], saida_aft["WeibullAFT"]), 4),
+        AUC_PR=round(average_precision_score(saida_aft["y"], saida_aft["WeibullAFT"]), 4),
+        Limiar=np.nan)])
     iso_linha = pd.DataFrame([dict(
         Modelo="IsolationForest (não supervisionado)", Conjunto="teste",
         Precision=np.nan, Recall=np.nan, F1=np.nan, F2=np.nan,
         AUC_ROC=round(roc_auc_score(saida_iso["y"], saida_iso["IsolationForest"]), 4),
         AUC_PR=round(average_precision_score(saida_iso["y"], saida_iso["IsolationForest"]), 4),
         Limiar=np.nan)])
-    pd.concat([tab, iso_linha], ignore_index=True).to_csv(
+    pd.concat([tab, aft_linha, iso_linha], ignore_index=True).to_csv(
         DIR_TABELAS / "comparativo_modelos.csv", index=False)
     mc, limiar = avaliar.matriz_confusao_campeao(sc_va, sc_te)
     avaliar.analise_falsos_negativos(sc_te, alertas, abt, limiar)
     avaliar.degradacao_temporal(sc_va, sc_te)
-    avaliar.impacto_negocio(sc_te, alertas, ap, limiar)
+    avaliar.impacto_negocio(sc_va, sc_te, alertas, ap, limiar)
     avaliar.fila_inspecao(sc_te)
-
-    print("[6b] Robustez: walk-forward, sensibilidade, calibração e custo")
-    wf = robustez.walk_forward(abt)
-    print(wf.to_string(index=False))
-    sens = robustez.sensibilidade_janela(abt)
-    print(sens.to_string(index=False))
-    tab_calib, resumo_calib = robustez.calibracao(sc_va, sc_te)
-    print(f"  Brier: bruto {resumo_calib['brier_bruto']:.4f} | "
-          f"calibrado {resumo_calib['brier_calibrado']:.4f} | "
-          f"base {resumo_calib['base']:.4f}")
-    tab_custo, limiar_otimo, beneficio_otimo = robustez.custo_limiar(
-        sc_te, alertas, ap, limiar)
-    print(f"  limiar F2={limiar:.4f} | ótimo financeiro={limiar_otimo:.4f} "
-          f"(R$ {beneficio_otimo:,.0f})")
-    subsist = robustez.recall_por_subsistema(sc_te, alertas, limiar)
-    print(subsist.to_string(index=False))
 
     print("[7/7] Figuras e tabelas")
     tabelas_eda(ap_bruto, tel_bruto, ap, tel, alertas, abt)
@@ -196,8 +190,6 @@ def main():
     X_te, _ = engenharia.matriz_xy(teste)
     figuras.fig11_12_shap(modelos["LightGBM"], X_te.reset_index(drop=True), sc_te)
     figuras.fig13_baseline_vs_modelos(tab)
-    figuras.fig14_calibracao(tab_calib, resumo_calib)
-    figuras.fig15_custo_limiar(tab_custo, limiar, limiar_otimo)
 
     print(f"\nPipeline concluído em {time.time() - t0:.0f}s")
     print(f"Figuras em relatorio/figuras | tabelas em relatorio/tabelas | "
