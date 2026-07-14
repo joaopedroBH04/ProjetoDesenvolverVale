@@ -1,0 +1,17 @@
+Feature,coef_por_dp,razao_tempo_por_dp,p_valor
+tag_taxa_alerta,-0.506,0.6029,0.0
+horas_operadas_24h,-0.2416,0.7853,0.0
+op_taxa_alerta,-0.1993,0.8193,0.0
+razao_taxa_24h_30d,-0.1761,0.8385,0.0
+n_dg_24h,-0.1589,0.8531,0.0
+n_dg_12h,-0.0751,0.9277,0.0
+n_dg_4h,-0.0549,0.9466,0.0
+n_dg_72h,-0.0254,0.9749,0.0
+n_crit1_72h,-0.0239,0.9763,0.0
+n_crit2_4h,-0.0152,0.985,0.0162
+ciclos_24h,-0.0087,0.9913,0.1281
+n_crit2_12h,0.0635,1.0655,0.0
+quase_gatilhos_24h,0.1359,1.1456,0.0
+h_desde_crit1,0.4531,1.5732,0.0
+h_desde_manutencao,0.5124,1.6693,0.0
+h_desde_alerta_dg,0.6221,1.8628,0.0
