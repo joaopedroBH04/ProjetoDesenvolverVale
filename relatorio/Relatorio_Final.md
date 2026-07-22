@@ -3,7 +3,13 @@
 ## Antecipação de Alertas Críticos em Frotas de Mineração
 
 **João Pedro Costa**
-pedrojoaao4@gmail.com
+costa.j13@yahoo.com
+Programa Desenvolver, Vale
+
+**Pedro Henrique Santos**
+pedro.hsdo2025@gmail.com
+Universidade Federal de Minas Gerais (UFMG)
+
 Programa Desenvolver, Edição 2026
 
 ---
